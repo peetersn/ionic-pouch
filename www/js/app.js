@@ -3,7 +3,7 @@
 // angular.module is a global place for creating, registering and retrieving Angular modules
 // 'starter' is the name of this angular module example (also set in a <body> attribute in index.html)
 // the 2nd parameter is an array of 'requires'
-var airFiPopApp = angular.module('starter', ['ionic']);
+var airFiPopApp = angular.module('starter', ['ionic', 'ngCordova']);
 
 var localDB = new PouchDB("todos");
 var remoteDB = new PouchDB("http://admin:password@peetersn.iriscouch.com/todos");
@@ -20,17 +20,14 @@ airFiPopApp.run(function($ionicPlatform) {
 		}
 
 		//we need to start synchronizing
-		console.log('Start sync');
+        console.log('Starting continuous replication with upstream', remoteDB);
 		localDB.sync(remoteDB, {
 			live: true
 		});
-		console.log('End sync');
-
 	});
 });
 
-airFiPopApp.controller("ExampleController", function($scope, $ionicPopup,
-	PouchDBListener) {
+airFiPopApp.controller("ExampleController", function($scope, $ionicPopup, PouchDBListener, $cordovaMedia, $ionicLoading) {
 
 	$scope.todos = [];
 
@@ -52,7 +49,7 @@ airFiPopApp.controller("ExampleController", function($scope, $ionicPopup,
 				console.log("Action not completed");
 			}
 		});
-	}
+	};
 
 	$scope.$on('add', function(event, todo) {
 		$scope.todos.push(todo);
@@ -65,15 +62,17 @@ airFiPopApp.controller("ExampleController", function($scope, $ionicPopup,
 			}
 		}
 	});
-
 });
+
 
 airFiPopApp.factory('PouchDBListener', ['$rootScope', function($rootScope) {
 
 	localDB.changes({
 		continuous: true,
 		onChange: function(change) {
-			if (!change.deleted) {
+            console.log("Change:", JSON.stringify(change));
+            var media;
+            if (!change.deleted) {
 				$rootScope.$apply(function() {
 					localDB.get(change.id, function(err, doc) {
 						$rootScope.$apply(function() {
@@ -81,10 +80,14 @@ airFiPopApp.factory('PouchDBListener', ['$rootScope', function($rootScope) {
 								console.log(err);
 							}
 							$rootScope.$broadcast('add', doc);
+                            media = new Media('audio/ping.mp3', null, null);
+                            media.play();
 						});
 					});
+                    media.release(); //cleanup
 				});
 			} else {
+                console.log("Delete change", JSON.stringify(change));
 				$rootScope.$apply(function() {
 					$rootScope.$broadcast('delete', change.id);
 				});
