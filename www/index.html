@@ -32,17 +32,23 @@
         <button class="right button button-icon icon ion-plus" ng-click="create()"></button>
       </ion-header-bar>
       <ion-content>
-          <img src="img/airfi_logo_small.png"/>
+          <!--<img src="img/airfi_logo_small.png"/>-->
           <ion-list>
             <ion-item ng-repeat="order in orders">
-                {{order.user}} (<b>{{order.seat}}</b>) Status: {{order.order_status}}
-                <button class="button" ng-click="processOrder(order._id)">Process</button>
+
+                <div class="row">
+                    <div class="col-50">
+                        {{order.user}} (<b>{{order.seat}}</b>) Status: {{order.order_status}}
+                    </div>
+                    <div class="col-25">
+                        <button class="button" ng-click="">Prepare</button>
+                    </div>
+                    <div class="col-25">
+                        <button class="button button-positive" ng-click="processOrder(order._id)">Process</button>
+                    </div>
+                </div>
             </ion-item>
          </ion-list>
-
-          <!--<button class="button" ng-click="notify()">Add notification</button><br>-->
-          <!--<button class="button" ng-click="isScheduled()">Is Scheduled?</button><br>-->
-          <!--<button class="button" ng-click="isTriggered()">Is triggered?</button>-->
 
       </ion-content>
 

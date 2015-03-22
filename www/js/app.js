@@ -114,8 +114,7 @@ airFiPopApp.controller("ExampleController", function($scope, $ionicPlatform, $io
         var id = getRandomArbitrary();
         $cordovaLocalNotification.add({
             id: id,
-            message: 'A new order has been placed by a passenger: ' + order.user + ' ' +order.seat
-            //autoCancel: true,
+            message: 'New order by a passenger: ' + order.user + ' ' +order.seat
         }).then(function () {
             console.log("Passenger-triggered notification has been set for pax: "+ order.user + ' ' +order.seat + ' at '+ order.createdAt);
         });
@@ -183,7 +182,6 @@ airFiPopApp.factory('PouchDBListener', ['$rootScope', function($rootScope) {
 				});
 			} else {
 				$rootScope.$apply(function() {
-                    console.log('something was deleted from remote...');
 					$rootScope.$broadcast('delete', change.id);
 				});
 			}

@@ -15,3 +15,24 @@
    "iataCode": "oc",
    "type": "purchase"
 }
+
+{
+   "_id": "purchase/3",
+   "user": "Val",
+   "seat": "2C",
+   "createdAt": "2014-10-13T13:03:23.049Z",
+   "iataCode": "oc",
+   "type": "purchase"
+}
+
+
+{
+   "_id": "purchase/2",
+   "user": "Bonny",
+   "seat": "2A",
+   "createdAt": "2014-10-13T13:03:23.049Z",
+   "iataCode": "oc",
+   "type": "purchase"
+}
+
+
