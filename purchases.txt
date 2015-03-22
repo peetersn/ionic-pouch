@@ -1,0 +1,17 @@
+{
+   "_id": "purchase/4",
+   "user": "brian",
+   "seat": "31C",
+   "createdAt": "2014-10-13T13:03:23.049Z",
+   "iataCode": "oc",
+   "type": "purchase"
+}
+
+{
+   "_id": "purchase/5",
+   "user": "John",
+   "seat": "3C",
+   "createdAt": "2014-10-13T13:03:23.049Z",
+   "iataCode": "oc",
+   "type": "purchase"
+}

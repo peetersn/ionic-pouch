@@ -54,7 +54,7 @@ airFiPopApp.controller("ExampleController", function($scope, $ionicPlatform, $io
         console.log("Local notification added");
     });
 
-	$scope.todos = [];
+	$scope.orders = [];
 
 	$scope.create = function() {
 		$ionicPopup.prompt({
@@ -76,33 +76,34 @@ airFiPopApp.controller("ExampleController", function($scope, $ionicPlatform, $io
 		});
 	};
 
-	$scope.$on('add', function(event, todo) {
-		$scope.todos.push(todo);
+    $scope.processOrder = function(id) {
+        for (var i = 0; i < $scope.orders.length; i++) {
+            if ($scope.orders[i]._id === id) {
+                $scope.orders.splice(i, 1);
+            }
+        }
+    };
+
+	$scope.$on('add', function(event, order) {
+		$scope.orders.push(order);
 	});
 
 	$scope.$on('delete', function(event, id) {
-		for (var i = 0; i < $scope.todos.length; i++) {
-			if ($scope.todos[i]._id === id) {
-				$scope.todos.splice(i, 1);
+		for (var i = 0; i < $scope.orders.length; i++) {
+			if ($scope.orders[i]._id === id) {
+				$scope.orders.splice(i, 1);
 			}
 		}
 	});
 
-    $scope.$on('notify', function(event, title) {
-        //var alarmTime = new Date();
-        //console.log(title);
+    $scope.$on('notify', function(event, order) {
         var id = getRandomArbitrary();
-        console.log('Notification: #'+id);
-        //alarmTime.setMinutes(alarmTime.getSeconds() + 10);
         $cordovaLocalNotification.add({
             id: id,
-            //date: alarmTime,
-            message: 'A new order has been placed by a passenger: ' + title
-            //title: 'AirFi POP',
+            message: 'A new order has been placed by a passenger: ' + order.user + ' ' +order.seat
             //autoCancel: true,
-            //sound: null
         }).then(function () {
-            //console.log("Passenger-triggered notification has been set");
+            console.log("Passenger-triggered notification has been set for pax: "+ order.user + ' ' +order.seat + ' at '+ order.createdAt);
         });
     });
 
@@ -141,13 +142,11 @@ function getRandomArbitrary() {
     return Math.floor(Math.random()*1122)
 }
 
-
 airFiPopApp.factory('PouchDBListener', ['$rootScope', function($rootScope) {
 
 	localDB.changes({
 		continuous: true,
 		onChange: function(change) {
-            //console.log("Change:", JSON.stringify(change));
 
             if (!change.deleted) {
 				$rootScope.$apply(function() {
@@ -156,8 +155,13 @@ airFiPopApp.factory('PouchDBListener', ['$rootScope', function($rootScope) {
 							if (err) {
 								console.log(err);
 							}
-							$rootScope.$broadcast('add', doc);
-                            $rootScope.$broadcast('notify', ""+doc.title);
+                            console.log("Type: "+doc.type);
+                            if(doc.type === 'purchase') {
+							    $rootScope.$broadcast('add', doc);
+                                $rootScope.$broadcast('notify', doc);
+                            } else {
+                                console.log('Ignoring non-purchase type');
+                            }
 
                             //var mp3URL = getMediaURL("audio/ping.mp3");
                             //var media = new Media(mp3URL, null, null);
@@ -168,7 +172,6 @@ airFiPopApp.factory('PouchDBListener', ['$rootScope', function($rootScope) {
 
 				});
 			} else {
-                //console.log("Delete change", JSON.stringify(change));
 				$rootScope.$apply(function() {
 					$rootScope.$broadcast('delete', change.id);
 				});

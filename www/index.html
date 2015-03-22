@@ -34,14 +34,15 @@
       <ion-content>
           <img src="img/airfi_logo_small.png"/>
           <ion-list>
-            <ion-item ng-repeat="todo in todos">
-                {{todo.title}}
+            <ion-item ng-repeat="order in orders">
+                {{order.user}} (<b>{{order.seat}}</b>) Status: {{order.order_status}}
+                <button class="button" ng-click="processOrder(order._id)">Process</button>
             </ion-item>
          </ion-list>
 
-          <button class="button" ng-click="notify()">Add notification</button><br>
-          <button class="button" ng-click="isScheduled()">Is Scheduled?</button><br>
-          <button class="button" ng-click="isTriggered()">Is triggered?</button>
+          <!--<button class="button" ng-click="notify()">Add notification</button><br>-->
+          <!--<button class="button" ng-click="isScheduled()">Is Scheduled?</button><br>-->
+          <!--<button class="button" ng-click="isTriggered()">Is triggered?</button>-->
 
       </ion-content>
 
