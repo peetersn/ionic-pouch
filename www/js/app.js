@@ -8,7 +8,7 @@ var airFiPopApp = angular.module('starter', ['ionic', 'ngCordova']);
 var localDB = new PouchDB("todos");
 var remoteDB = new PouchDB("http://admin:password@peetersn.iriscouch.com/todos");
 
-airFiPopApp.run(function($ionicPlatform, $rootScope, $timeout) {
+airFiPopApp.run(function($ionicPlatform, $rootScope, $timeout, $cordovaSplashscreen) {
 	$ionicPlatform.ready(function() {
 		// Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
 		// for form inputs)
@@ -34,12 +34,16 @@ airFiPopApp.run(function($ionicPlatform, $rootScope, $timeout) {
 		//we need to start synchronizing
         console.log('Starting continuous replication with upstream', remoteDB);
 		localDB.sync(remoteDB, {
-			live: true
+			live: true, retry: true
 		});
 	});
+
+    setTimeout(function() {
+        $cordovaSplashscreen.hide()
+    }, 5000);
 });
 
-airFiPopApp.controller("ExampleController", function($scope, $ionicPlatform, $ionicPopup, PouchDBListener, $cordovaMedia, $cordovaLocalNotification) {
+airFiPopApp.controller("ExampleController", function($scope, $ionicPlatform, $ionicPopup, PouchDBListener, $cordovaSplashscreen, $cordovaMedia, $cordovaLocalNotification) {
 
     // For iOS 8 only, it is a requirement to request for notification permissions first.
     // This can be accomplished by adding the following in our controller:
@@ -77,11 +81,21 @@ airFiPopApp.controller("ExampleController", function($scope, $ionicPlatform, $io
 	};
 
     $scope.processOrder = function(id) {
-        for (var i = 0; i < $scope.orders.length; i++) {
-            if ($scope.orders[i]._id === id) {
-                $scope.orders.splice(i, 1);
+        //delete in localDB
+        localDB.get(id).then(function(doc) {
+            console.log('Proceed with removing doc: '+ doc._id);
+            return localDB.remove(doc._id, doc._rev);
+        }).then(function (result) {
+            //cleanup local model
+            for (var i = 0; i < $scope.orders.length; i++) {
+                if ($scope.orders[i]._id === id) {
+                    $scope.orders.splice(i, 1);
+                }
             }
-        }
+
+        }).catch(function (err) {
+            console.log(err);
+        });
     };
 
 	$scope.$on('add', function(event, order) {
@@ -155,14 +169,10 @@ airFiPopApp.factory('PouchDBListener', ['$rootScope', function($rootScope) {
 							if (err) {
 								console.log(err);
 							}
-                            console.log("Type: "+doc.type);
                             if(doc.type === 'purchase') {
 							    $rootScope.$broadcast('add', doc);
                                 $rootScope.$broadcast('notify', doc);
-                            } else {
-                                console.log('Ignoring non-purchase type');
                             }
-
                             //var mp3URL = getMediaURL("audio/ping.mp3");
                             //var media = new Media(mp3URL, null, null);
                             //media.play();
@@ -173,6 +183,7 @@ airFiPopApp.factory('PouchDBListener', ['$rootScope', function($rootScope) {
 				});
 			} else {
 				$rootScope.$apply(function() {
+                    console.log('something was deleted from remote...');
 					$rootScope.$broadcast('delete', change.id);
 				});
 			}
