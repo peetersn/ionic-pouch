@@ -22,24 +22,30 @@
     <!-- your app's js -->
     <script src="js/pouchdb-3.3.1.min.js"></script>
     <script src="js/app.js"></script>
-
-
-
   </head>
   <body ng-app="starter">
 
     <ion-pane ng-controller="ExampleController">
       <ion-header-bar class="bar-stable">
         <h1 class="title">AirFi POP</h1>
+
         <button class="right button button-icon icon ion-plus" ng-click="create()"></button>
       </ion-header-bar>
       <ion-content>
+          <img src="img/airfi_logo_small.png"/>
           <ion-list>
             <ion-item ng-repeat="todo in todos">
                 {{todo.title}}
             </ion-item>
          </ion-list>
+
+          <button class="button" ng-click="notify()">Add notification</button><br>
+          <button class="button" ng-click="isScheduled()">Is Scheduled?</button><br>
+          <button class="button" ng-click="isTriggered()">Is triggered?</button>
+
       </ion-content>
+
+
     </ion-pane>
   </body>
 </html>

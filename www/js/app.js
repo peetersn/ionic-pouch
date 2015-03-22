@@ -8,7 +8,7 @@ var airFiPopApp = angular.module('starter', ['ionic', 'ngCordova']);
 var localDB = new PouchDB("todos");
 var remoteDB = new PouchDB("http://admin:password@peetersn.iriscouch.com/todos");
 
-airFiPopApp.run(function($ionicPlatform) {
+airFiPopApp.run(function($ionicPlatform, $rootScope, $timeout) {
 	$ionicPlatform.ready(function() {
 		// Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
 		// for form inputs)
@@ -19,6 +19,18 @@ airFiPopApp.run(function($ionicPlatform) {
 			StatusBar.styleDefault();
 		}
 
+        //pasted code to work around some issue...
+        window.plugin.notification.local.onadd = function(id, state, json) {
+            var notification = {
+                id: id,
+                state: state,
+                json: json
+            };
+            $timeout(function() {
+                $rootScope.$broadcast("$cordovaLocalNotification:added", notification);
+            });
+        };
+
 		//we need to start synchronizing
         console.log('Starting continuous replication with upstream', remoteDB);
 		localDB.sync(remoteDB, {
@@ -27,7 +39,20 @@ airFiPopApp.run(function($ionicPlatform) {
 	});
 });
 
-airFiPopApp.controller("ExampleController", function($scope, $ionicPopup, PouchDBListener, $cordovaMedia, $ionicLoading) {
+airFiPopApp.controller("ExampleController", function($scope, $ionicPlatform, $ionicPopup, PouchDBListener, $cordovaMedia, $cordovaLocalNotification) {
+
+    // For iOS 8 only, it is a requirement to request for notification permissions first.
+    // This can be accomplished by adding the following in our controller:
+    $ionicPlatform.ready(function() {
+        if(device.platform === "iOS") {
+            window.plugin.notification.local.promptForPermission();
+        }
+    });
+
+    $scope.$on("$cordovaLocalNotification:added", function(id, state, json) {
+        alert("Added a notification");
+        console.log("Local notification added");
+    });
 
 	$scope.todos = [];
 
@@ -62,7 +87,59 @@ airFiPopApp.controller("ExampleController", function($scope, $ionicPopup, PouchD
 			}
 		}
 	});
+
+    $scope.$on('notify', function(event, title) {
+        //var alarmTime = new Date();
+        //console.log(title);
+        var id = getRandomArbitrary();
+        console.log('Notification: #'+id);
+        //alarmTime.setMinutes(alarmTime.getSeconds() + 10);
+        $cordovaLocalNotification.add({
+            id: id,
+            //date: alarmTime,
+            message: 'A new order has been placed by a passenger: ' + title
+            //title: 'AirFi POP',
+            //autoCancel: true,
+            //sound: null
+        }).then(function () {
+            //console.log("Passenger-triggered notification has been set");
+        });
+    });
+
+    //$scope.notify = function(title) {
+    //
+    //
+    //    var alarmTime = new Date();
+    //    alarmTime.setMinutes(alarmTime.getSeconds() + 10);
+    //    $cordovaLocalNotification.add({
+    //        id: '1234',
+    //        date: alarmTime,
+    //        message: 'A new order has been triggered manually',
+    //        title: 'AirFi POP',
+    //        autoCancel: true,
+    //        sound: null
+    //    }).then(function () {
+    //        console.log("A manual notification has been set");
+    //    });
+    //};
+
+    $scope.isScheduled = function() {
+        $cordovaLocalNotification.isScheduled("1234").then(function(isScheduled) {
+            alert("Notification 1234 Scheduled: " + isScheduled);
+        });
+    };
+
+    $scope.isTriggered = function() {
+        $cordovaLocalNotification.isTriggered("1234").then(function(isTriggered) {
+            alert("Notification 1234 Triggered: " + isTriggered);
+        });
+    };
+
 });
+
+function getRandomArbitrary() {
+    return Math.floor(Math.random()*1122)
+}
 
 
 airFiPopApp.factory('PouchDBListener', ['$rootScope', function($rootScope) {
@@ -70,8 +147,8 @@ airFiPopApp.factory('PouchDBListener', ['$rootScope', function($rootScope) {
 	localDB.changes({
 		continuous: true,
 		onChange: function(change) {
-            console.log("Change:", JSON.stringify(change));
-            var media;
+            //console.log("Change:", JSON.stringify(change));
+
             if (!change.deleted) {
 				$rootScope.$apply(function() {
 					localDB.get(change.id, function(err, doc) {
@@ -80,14 +157,18 @@ airFiPopApp.factory('PouchDBListener', ['$rootScope', function($rootScope) {
 								console.log(err);
 							}
 							$rootScope.$broadcast('add', doc);
-                            media = new Media('audio/ping.mp3', null, null);
-                            media.play();
+                            $rootScope.$broadcast('notify', ""+doc.title);
+
+                            //var mp3URL = getMediaURL("audio/ping.mp3");
+                            //var media = new Media(mp3URL, null, null);
+                            //media.play();
+                            //media.setVolume(1);
 						});
 					});
-                    media.release(); //cleanup
+
 				});
 			} else {
-                console.log("Delete change", JSON.stringify(change));
+                //console.log("Delete change", JSON.stringify(change));
 				$rootScope.$apply(function() {
 					$rootScope.$broadcast('delete', change.id);
 				});
@@ -98,3 +179,13 @@ airFiPopApp.factory('PouchDBListener', ['$rootScope', function($rootScope) {
 	return true; //you need to return a value no matter what.
 
 }]);
+
+
+function getMediaURL(s) {
+    if(device.platform.toLowerCase() === "android") {
+        return "/android_asset/www/" + s;
+    }
+    return s;
+}
+
+
