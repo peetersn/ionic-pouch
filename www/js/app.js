@@ -172,10 +172,10 @@ airFiPopApp.factory('PouchDBListener', ['$rootScope', function($rootScope) {
 							    $rootScope.$broadcast('add', doc);
                                 $rootScope.$broadcast('notify', doc);
                             }
-                            //var mp3URL = getMediaURL("audio/ping.mp3");
-                            //var media = new Media(mp3URL, null, null);
-                            //media.play();
-                            //media.setVolume(1);
+                            var mp3URL = getMediaURL("audio/ping.mp3");
+                            var media = new Media(mp3URL, null, null);
+                            media.play();
+                            media.setVolume(1);
 						});
 					});
 
